@@ -1,0 +1,8 @@
+node_modules
+
+/.cache
+/build
+.env
+
+# SQLite database
+prisma/dev.db

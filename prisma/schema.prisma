@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  password     String
+  firstName    String
+  lastName     String
+  role         String
+  status       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  testRuns     TestRun[]
+  requirements Requirement[]
+  testCases    TestCase[]
+  comments     Comment[]
+}
+
+model Requirement {
+  id                  String     @id @default(cuid())
+  title               String
+  description         String
+  priority            String
+  status              String
+  category            String
+  version             String
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  createdBy           User       @relation(fields: [createdById], references: [id])
+  createdById         String
+  tags                Tag[]
+  testCases           TestCase[]
+  relatedRequirements Requirement[] @relation("RelatedRequirements")
+  parentRequirements  Requirement[] @relation("RelatedRequirements")
+  comments            Comment[]
+  attachments         Attachment[]
+}
+
+model TestCase {
+  id                 String     @id @default(cuid())
+  title              String
+  description        String
+  preconditions      String
+  type               String
+  priority           String
+  status             String
+  automationStatus   String
+  automationScriptPath String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  createdBy          User       @relation(fields: [createdById], references: [id])
+  createdById        String
+  steps              TestStep[]
+  requirements       Requirement[]
+  testResults        TestResult[]
+}
+
+model TestStep {
+  id              String   @id @default(cuid())
+  stepNumber      Int
+  action          String
+  expectedResult  String
+  testCase        TestCase @relation(fields: [testCaseId], references: [id])
+  testCaseId      String
+}
+
+model TestRun {
+  id           String       @id @default(cuid())
+  name         String
+  description  String?
+  startDate    DateTime
+  endDate      DateTime?
+  status       String
+  executedBy   User         @relation(fields: [executedById], references: [id])
+  executedById String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  results      TestResult[]
+}
+
+model TestResult {
+  id           String       @id @default(cuid())
+  status       String
+  notes        String?
+  executedAt   DateTime
+  testRun      TestRun      @relation(fields: [testRunId], references: [id])
+  testRunId    String
+  testCase     TestCase     @relation(fields: [testCaseId], references: [id])
+  testCaseId   String
+  attachments  Attachment[]
+}
+
+model Tag {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  description  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  requirements Requirement[]
+}
+
+model Comment {
+  id            String      @id @default(cuid())
+  text          String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  author        User        @relation(fields: [authorId], references: [id])
+  authorId      String
+  requirement   Requirement @relation(fields: [requirementId], references: [id])
+  requirementId String
+}
+
+model Attachment {
+  id            String      @id @default(cuid())
+  fileName      String
+  fileType      String
+  fileSize      Int
+  filePath      String
+  uploadedAt    DateTime    @default(now())
+  requirement   Requirement? @relation(fields: [requirementId], references: [id])
+  requirementId String?
+  testResult    TestResult?  @relation(fields: [testResultId], references: [id])
+  testResultId  String?
+}
+
+model Invitation {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  createdBy String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+}
